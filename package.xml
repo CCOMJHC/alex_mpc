@@ -9,29 +9,18 @@
   <license>BSD</license>
 
   <buildtool_depend>catkin</buildtool_depend>
-  <build_depend>geometry_msgs</build_depend>
-  <build_depend>geographic_msgs</build_depend>
-  <build_depend>marine_msgs</build_depend>
-  <build_depend>roscpp</build_depend>
-  <build_depend>rosbag</build_depend>
-  <build_depend>project11</build_depend>
-  <build_depend>message_generation</build_depend>
-  <build_export_depend>geometry_msgs</build_export_depend>
-  <build_export_depend>geographic_msgs</build_export_depend>
-  <build_export_depend>marine_msgs</build_export_depend>
-  <build_export_depend>roscpp</build_export_depend>
-  <build_export_depend>rosbag</build_export_depend>
-  <exec_depend>message_runtime</exec_depend>
-  <exec_depend>geometry_msgs</exec_depend>
-  <exec_depend>geographic_msgs</exec_depend>
-  <exec_depend>marine_msgs</exec_depend>
-  <exec_depend>roscpp</exec_depend>
-  <exec_depend>rosbag</exec_depend>
-  <exec_depend>project11</exec_depend>
+
+  <depend>message_generation</depend>
+  <depend>message_runtime</depend>
+  <depend>geometry_msgs</depend>
+  <depend>geographic_msgs</depend>
+  <depend>marine_msgs</depend>
+  <depend>roscpp</depend>
+  <depend>rosbag</depend>
+  <depend>project11</depend>
   <depend>path_planner_common</depend>
   <depend>dynamic_reconfigure</depend>
   <depend>project11_transformations</depend>
-
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
