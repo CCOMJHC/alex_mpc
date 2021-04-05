@@ -95,6 +95,7 @@ Controller::MpcState Controller::mpc(State startState, const DubinsPlan& referen
         // set time in scoring checkpoint so we can sample the reference trajectory
         cachedScoringCheckpoints[iterations].time() = startState.time() + ((iterations + 1) * c_ScoringTimeStep);
         // sample the reference trajectory at the scoring checkpoint
+        printf("DEBUG: Controller::mpc() while-loop referenceTrajectory.sample() called on cachedScoringCheckpoints[iterations] State with time %f", cachedScoringCheckpoints[iterations].time());
         referenceTrajectory.sample(cachedScoringCheckpoints[iterations]);
         int searchDepthIndex = 0;
         while (searchDepthIndex >= 0) {
@@ -309,6 +310,7 @@ State Controller::updateReferenceTrajectory(const DubinsPlan& referenceTrajector
         // being too low, bad controller scoring parameters, or just a hard sea state to operate in.
         State stateOnReferenceTrajectory;
         stateOnReferenceTrajectory.time() = result.state.state.time();
+        printf("DEBUG: Controller::updateReferenceTrajectory() referenceTrajectory.sample() called on stateOnReferenceTrajectory State with time %f", stateOnReferenceTrajectory.time());
         referenceTrajectory.sample(stateOnReferenceTrajectory);
         auto score = compareStates(stateOnReferenceTrajectory, result.state);
         {
