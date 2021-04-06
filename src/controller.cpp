@@ -95,7 +95,7 @@ Controller::MpcState Controller::mpc(State startState, const DubinsPlan& referen
         // set time in scoring checkpoint so we can sample the reference trajectory
         cachedScoringCheckpoints[iterations].time() = startState.time() + ((iterations + 1) * c_ScoringTimeStep);
         // sample the reference trajectory at the scoring checkpoint
-        printf("DEBUG: Controller::mpc() while-loop referenceTrajectory.sample() called on cachedScoringCheckpoints[iterations] State with time %f", cachedScoringCheckpoints[iterations].time());
+        printf("DEBUG: Controller::mpc() while-loop referenceTrajectory.sample() called on cachedScoringCheckpoints[iterations] State with time %f\n", cachedScoringCheckpoints[iterations].time());
         referenceTrajectory.sample(cachedScoringCheckpoints[iterations]);
         int searchDepthIndex = 0;
         while (searchDepthIndex >= 0) {
