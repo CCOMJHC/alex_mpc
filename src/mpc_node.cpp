@@ -3,9 +3,10 @@
 #include "std_msgs/Bool.h"
 #include "std_msgs/String.h"
 #include "marine_msgs/Helm.h"
-#include "marine_msgs/NavEulerStamped.h"
+#include "nav_msgs/Odometry.h"
 #include <vector>
 #include "project11/gz4d_geo.h"
+#include "project11/tf2_utils.h"
 #include <path_planner_common/UpdateReferenceTrajectory.h>
 #include <fstream>
 #include <geometry_msgs/PoseStamped.h>
@@ -37,17 +38,18 @@ public:
      */
     explicit MPCNode()
     {
-        m_helm_pub = m_node_handle.advertise<marine_msgs::Helm>("/helm",1);
+        m_helm_pub = m_node_handle.advertise<marine_msgs::Helm>("helm",1);
         m_display_pub = m_node_handle.advertise<geographic_visualization_msgs::GeoVizItem>("project11/display",1);
         m_disturbance_estimate_pub = m_node_handle.advertise<geometry_msgs::Vector3>("mpc/disturbance_estimate", 1);
 
         m_controller_msgs_sub = m_node_handle.subscribe("controller_msgs", 10, &MPCNode::controllerMsgsCallback, this);
-        m_position_sub = m_node_handle.subscribe("position_map", 10, &MPCNode::positionCallback, this);
-        m_heading_sub = m_node_handle.subscribe("heading", 10, &MPCNode::headingCallback, this);
-        m_speed_sub = m_node_handle.subscribe("sog", 10, &MPCNode::speedCallback, this);
         m_piloting_mode_sub = m_node_handle.subscribe("project11/piloting_mode", 10, &MPCNode::pilotingModeCallback, this);
         m_reference_trajectory_sub = m_node_handle.subscribe("mpc/reference_trajectory", 10, &MPCNode::referenceTrajectoryCallback, this);
         m_disturbance_estimate_sub = m_node_handle.subscribe("disturbance_estimate", 5, &MPCNode::disturbanceEstimateCallback, this);
+        m_odom_sub = m_node_handle.subscribe("odom", 10, &MPCNode::odometryCallback, this);
+
+        ros::NodeHandle nh_private("~");
+        nh_private.param<std::string>("map_frame", m_map_frame, "map");
 
         m_update_reference_trajectory_service = m_node_handle.advertiseService("mpc/update_reference_trajectory", &MPCNode::updateReferenceTrajectory, this);
 
@@ -58,7 +60,7 @@ public:
 
         m_Dynamic_Reconfigure_Server.setCallback(f);
 
-        m_TrajectoryDisplayer = TrajectoryDisplayerHelper(m_node_handle, &m_display_pub);
+        m_TrajectoryDisplayer = TrajectoryDisplayerHelper(m_node_handle, &m_display_pub, m_transformations, m_map_frame);
 
         m_Output = &std::cerr;
     }
@@ -93,42 +95,13 @@ public:
         }
     }
 
-    /**
-     * Update the controller's idea of the vehicle's heading.
-     * @param inmsg a message containing the new heading
-     */
-    void headingCallback(const marine_msgs::NavEulerStamped::ConstPtr& inmsg)
+    void odometryCallback(const nav_msgs::Odometry::ConstPtr &inmsg)
     {
-        m_current_heading = inmsg->orientation.heading * M_PI / 180.0;
-    }
 
-    /**
-     * Update the controller's idea of the vehicle's speed.
-     * @param inmsg a message containing the new speed
-     */
-    void speedCallback(const geometry_msgs::TwistStamped::ConstPtr& inmsg)
-    {
-        m_current_speed = inmsg->twist.linear.x; // this will change once /sog is a vector
-    }
-
-    /**
-     * Update the controller's idea of the vehicle's position.
-     * @param inmsg a message containing the new position
-     */
-    void positionCallback(const geometry_msgs::PoseStamped::ConstPtr &inmsg)
-    {
-        // extract yaw from orientation
-        tf::Quaternion q0(inmsg->pose.orientation.x,
-                          inmsg->pose.orientation.y,
-                          inmsg->pose.orientation.z,
-                          inmsg->pose.orientation.w);
-        tf::Matrix3x3 m0(q0);
-        double roll, pitch, yaw;
-        m0.getRPY(roll, pitch, yaw);
-        auto heading = M_PI_2 - yaw; // convert yaw to heading
-
-        m_current_x = inmsg->pose.position.x;
-        m_current_y = inmsg->pose.position.y;
+        m_current_heading = project11::quaternionToHeadingDegrees(inmsg->pose.pose.orientation);
+        m_current_speed = project11::speedOverGround(inmsg->twist.twist.linear);
+        m_current_x = inmsg->pose.pose.position.x;
+        m_current_y = inmsg->pose.pose.position.y;
 
         m_Controller->updatePosition(State(
                 m_current_x,
@@ -136,7 +109,9 @@ public:
                 m_current_heading,
                 m_current_speed,
                 getTime()));
+
     }
+
 
     /**
      * Update controller parameters from dynamic reconfig.
@@ -274,9 +249,7 @@ private:
     ros::Publisher m_disturbance_estimate_pub;
 
     ros::Subscriber m_controller_msgs_sub;
-    ros::Subscriber m_position_sub;
-    ros::Subscriber m_heading_sub;
-    ros::Subscriber m_speed_sub;
+    ros::Subscriber m_odom_sub;
     ros::Subscriber m_piloting_mode_sub;
     ros::Subscriber m_reference_trajectory_sub;
     ros::Subscriber m_disturbance_estimate_sub;
@@ -294,6 +267,10 @@ private:
     std::pair<double, double> m_DisturbanceEstimate;
 
     std::ostream* m_Output;
+
+    project11::Transformations m_transformations;
+    std::string m_map_frame;
+
 };
 
 int main(int argc, char **argv)
