@@ -26,12 +26,12 @@ double Controller::getTime()
 Controller::MpcState Controller::mpc(State startState, const DubinsPlan& referenceTrajectory, double endTime,
                          long trajectoryNumber)
 {
-    std::cerr << "Controller.mpc: starting" << std::endl;
+    // std::cerr << "Controller.mpc: starting" << std::endl;
     // just checking here too so we can skip stuff
     if (!validTrajectoryNumber(trajectoryNumber)) {
         return {};
     }
-    std::cerr << "Controller.mpc: trajectoryNumber is valid" << std::endl;
+    // std::cerr << "Controller.mpc: trajectoryNumber is valid" << std::endl;
 //    std::pair<double, double> disturbanceEstimate = m_DisturbanceEstimator.getCurrent(startState);
 
 //    *m_Output << "Current estimated to be " << m_DisturbanceEstimate.first << ", " << m_DisturbanceEstimate.second << std::endl;
@@ -59,16 +59,16 @@ Controller::MpcState Controller::mpc(State startState, const DubinsPlan& referen
 
     int iterations = 0;
     auto trajectoryStartTime = referenceTrajectory.get().front().getStartTime();
-    std::cerr << "Controller.mpc: just got trajectoryStartTime from referenceTrajectory" << std::endl;
+    // std::cerr << "Controller.mpc: just got trajectoryStartTime from referenceTrajectory" << std::endl;
     // intentional use of integer cast here, despite my IDE complaining
-    std::cerr << "Controller.mpc: trajectoryStartTime = " << trajectoryStartTime << ", startState.time() = " << startState.time() << ", referenceTrajectory.totalTime() = " << referenceTrajectory.totalTime() << ", c_ScoringTimeStep = " << c_ScoringTimeStep << std::endl;
+    // std::cerr << "Controller.mpc: trajectoryStartTime = " << trajectoryStartTime << ", startState.time() = " << startState.time() << ", referenceTrajectory.totalTime() = " << referenceTrajectory.totalTime() << ", c_ScoringTimeStep = " << c_ScoringTimeStep << std::endl;
     const int maxIterations = (trajectoryStartTime - startState.time() + referenceTrajectory.totalTime()) / c_ScoringTimeStep - 1;
-    std::cerr << "Controller.mpc: maxIterations = " << maxIterations << std::endl;
+    // std::cerr << "Controller.mpc: maxIterations = " << maxIterations << std::endl;
     // set up storage (no heap memory)
     // each "stack frame" in DFS is represented by a slot in these arrays, so I can skip overhead of recursion
     // allocate space to cache states along reference trajectory at which we compute trajectory scores
     State cachedScoringCheckpoints[maxIterations];
-    std::cerr << "Controller.mpc: just declared cachedScoringCheckpoints" << std::endl;
+    // std::cerr << "Controller.mpc: just declared cachedScoringCheckpoints" << std::endl;
     // allocate space for the trajectory in consideration and the best trajectory (at max length)
     MpcState currentTrajectory[maxIterations + 1], bestTrajectory[maxIterations + 1]; // currentTrajectory holds start too
     // set start state in trajectory in consideration
@@ -82,9 +82,9 @@ Controller::MpcState Controller::mpc(State startState, const DubinsPlan& referen
     int nRuddersArray[maxIterations], nThrottlesArray[maxIterations];
     int rudderIndices[maxIterations], throttleIndices[maxIterations];
 
-    std::cerr << "Controller.mpc: about to iterate" << std::endl;
+    // std::cerr << "Controller.mpc: about to iterate" << std::endl;
     while (iterations < maxIterations) { // don't even bother to check the time here
-        std::cerr << "Controller.mpc: starting iteration " << iterations << std::endl;
+        // std::cerr << "Controller.mpc: starting iteration " << iterations << std::endl;
         auto minScore = DBL_MAX;
         // cut out when the reference trajectory is updated
         if (!validTrajectoryNumber(trajectoryNumber)) {
@@ -102,7 +102,7 @@ Controller::MpcState Controller::mpc(State startState, const DubinsPlan& referen
         // set time in scoring checkpoint so we can sample the reference trajectory
         cachedScoringCheckpoints[iterations].time() = startState.time() + ((iterations + 1) * c_ScoringTimeStep);
         // sample the reference trajectory at the scoring checkpoint
-        printf("DEBUG: Controller::mpc() while-loop referenceTrajectory.sample() called on cachedScoringCheckpoints[iterations] State with time %f\n", cachedScoringCheckpoints[iterations].time());
+        // printf("DEBUG: Controller::mpc() while-loop referenceTrajectory.sample() called on cachedScoringCheckpoints[iterations] State with time %f\n", cachedScoringCheckpoints[iterations].time());
         referenceTrajectory.sample(cachedScoringCheckpoints[iterations]);
         int searchDepthIndex = 0;
         while (searchDepthIndex >= 0) {
@@ -253,7 +253,7 @@ bool Controller::validTrajectoryNumber(long trajectoryNumber) {
 
 State Controller::updateReferenceTrajectory(const DubinsPlan& referenceTrajectory, long trajectoryNumber,
                                             bool getFutureStateEstimate) {
-    std::cerr << "Controller.updateReferenceTrajectory: starting" << std::endl;
+    // std::cerr << "Controller.updateReferenceTrajectory: starting" << std::endl;
     if (referenceTrajectory.empty()){
         // Not long enough for MPC. Balk out.
         // NOTE: previous MPC thread may still be running; that can time out on its own
@@ -263,33 +263,33 @@ State Controller::updateReferenceTrajectory(const DubinsPlan& referenceTrajector
 
     // set the trajectory number, which lets any already-running MPC thread(s) know to terminate
     setTrajectoryNumber(trajectoryNumber);
-    std::cerr << "Controller.updateReferenceTrajectory: just setTrajectoryNumber to " << trajectoryNumber << std::endl;
+    // std::cerr << "Controller.updateReferenceTrajectory: just setTrajectoryNumber to " << trajectoryNumber << std::endl;
 
     // get the next start state
     auto start = getStateAfterCurrentControl();
-    std::cerr << "Controller.updateReferenceTrajectory: just did getStateAfterCurrentControl" << std::endl;
+    // std::cerr << "Controller.updateReferenceTrajectory: just did getStateAfterCurrentControl" << std::endl;
 
     MpcState result;
 
     if (getFutureStateEstimate) {
-        std::cerr << "Controller.updateReferenceTrajectory: getFutureStateEstimate returned TRUE" << std::endl;
+        // std::cerr << "Controller.updateReferenceTrajectory: getFutureStateEstimate returned TRUE" << std::endl;
         // do first round of MPC so we can return a state based on the new reference trajectory
         result = mpc(start.state, referenceTrajectory, m_ControlReceiver->getTime() + m_PlanningTime,
                           trajectoryNumber);
-        std::cerr << "Controller.updateReferenceTrajectory: just called mpc()" << std::endl;
+        // std::cerr << "Controller.updateReferenceTrajectory: just called mpc()" << std::endl;
         sendControls(result.LastRudder, result.LastThrottle);
-        std::cerr << "Controller.updateReferenceTrajectory: just called sendControls()" << std::endl;
+        // std::cerr << "Controller.updateReferenceTrajectory: just called sendControls()" << std::endl;
     }
-    std::cerr << "Controller.updateReferenceTrajectory: exiting getFutureStateEstimate-triggered control block" << std::endl;
+    // std::cerr << "Controller.updateReferenceTrajectory: exiting getFutureStateEstimate-triggered control block" << std::endl;
 
     // join the last thread used for MPC
     // should be able to wait for no time at all but I'll give it some leeway for now
     auto status = m_LastMpc.wait_for(std::chrono::milliseconds((int)(1000 * m_PlanningTime)));
-    std::cerr << "Controller.updateReferenceTrajectory: just got status of m_LastMPC" << std::endl;
+    // std::cerr << "Controller.updateReferenceTrajectory: just got status of m_LastMPC" << std::endl;
     switch (status) {
         case std::future_status::ready:
             // good
-            std::cerr << "Controller.updateReferenceTrajectory: m_LastMPC has status \"ready\"" << std::endl;
+            // std::cerr << "Controller.updateReferenceTrajectory: m_LastMPC has status \"ready\"" << std::endl;
             m_LastMpc.get(); // not sure this is necessary
             break;
         case std::future_status::timeout:
@@ -306,9 +306,9 @@ State Controller::updateReferenceTrajectory(const DubinsPlan& referenceTrajector
     // Copies reference trajectory so we shouldn't have to deal with issues of a reference to a local variable going out of scope
     // There are a bunch of different ways of doing this - I went with std::async so I could hold onto the future object
     // and potentially report failures. Occasionally get that runtime error up there and I don't know why yet.
-    std::cerr << "Controller.updateReferenceTrajectory: about to start new MPC thread" << std::endl;
+    // std::cerr << "Controller.updateReferenceTrajectory: about to start new MPC thread" << std::endl;
     m_LastMpc = std::async(std::launch::async, [=]{ runMpc(referenceTrajectory, trajectoryNumber); });
-    std::cerr << "Controller.updateReferenceTrajectory: just started new MPC thread" << std::endl;
+    // std::cerr << "Controller.updateReferenceTrajectory: just started new MPC thread" << std::endl;
 
     if (getFutureStateEstimate) {
         // Determine if reference trajectory seems feasible ("close enough")
@@ -327,7 +327,7 @@ State Controller::updateReferenceTrajectory(const DubinsPlan& referenceTrajector
         // being too low, bad controller scoring parameters, or just a hard sea state to operate in.
         State stateOnReferenceTrajectory;
         stateOnReferenceTrajectory.time() = result.state.state.time();
-        printf("DEBUG: Controller::updateReferenceTrajectory() referenceTrajectory.sample() called on stateOnReferenceTrajectory State with time %f", stateOnReferenceTrajectory.time());
+        // printf("DEBUG: Controller::updateReferenceTrajectory() referenceTrajectory.sample() called on stateOnReferenceTrajectory State with time %f", stateOnReferenceTrajectory.time());
         referenceTrajectory.sample(stateOnReferenceTrajectory);
         auto score = compareStates(stateOnReferenceTrajectory, result.state);
         {
@@ -349,10 +349,10 @@ State Controller::updateReferenceTrajectory(const DubinsPlan& referenceTrajector
                 result.state.state.speed() = result.state.speedOverGround;
             }
         }
-        std::cerr << "Controller.updateReferenceTrajectory: about to return result.state.state" << std::endl;
+        // std::cerr << "Controller.updateReferenceTrajectory: about to return result.state.state" << std::endl;
         return result.state.state;
     } else {
-        std::cerr << "Controller.updateReferenceTrajectory: about to return {}" << std::endl;
+        // std::cerr << "Controller.updateReferenceTrajectory: about to return {}" << std::endl;
         return {};
     }
 }
