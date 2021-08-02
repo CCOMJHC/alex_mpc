@@ -4,6 +4,7 @@
 #include "controller.h"
 #include <cassert>
 #include <cfloat>
+#include <iomanip>
 
 using namespace std;
 
@@ -12,6 +13,8 @@ Controller::Controller(ControlReceiver *controlReceiver) {
     // load it up with an empty future
     m_LastMpc = std::async(std::launch::async, []{});
     m_Output = &std::cerr; // default output
+    // human readable timestamps for logging
+    cerr << fixed << showpoint << setprecision(9);
 }
 
 Controller::~Controller() = default;
@@ -88,7 +91,7 @@ Controller::MpcState Controller::mpc(State startState, const DubinsPlan& referen
         auto minScore = DBL_MAX;
         // cut out when the reference trajectory is updated
         if (!validTrajectoryNumber(trajectoryNumber)) {
-           *m_Output << "Trajectory number " << trajectoryNumber << " not valid." << endl;
+            cerr << m_ControlReceiver->getTime() << ": Trajectory number " << trajectoryNumber << " not valid." << endl;
             return {}; // skip cleanup because we're supposed to terminate the thread
         }
 
@@ -408,8 +411,9 @@ void Controller::runMpc(DubinsPlan trajectory, long trajectoryNumber) {
         // pass controls to /helm through the node
         sendControls(result.LastRudder, result.LastThrottle);
     }
-    if (m_ControlReceiver->getTime() >= endTime) {
-        *m_Output << "Controller's reference trajectory appears to have timed out. No more controls will be issued" << std::endl;
+    double checkInTime = m_ControlReceiver->getTime();
+    if (checkInTime >= endTime) {
+        cerr << checkInTime << ": Controller's reference trajectory appears to have timed out. No more controls will be issued" << std::endl;
         // let node know we timed out
         m_ControlReceiver->timedOut();
     }
