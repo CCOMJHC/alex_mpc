@@ -64,8 +64,8 @@ Controller::MpcState Controller::mpc(State startState, const DubinsPlan& referen
     auto trajectoryStartTime = referenceTrajectory.get().front().getStartTime();
     // std::cerr << "Controller.mpc: just got trajectoryStartTime from referenceTrajectory" << std::endl;
     // intentional use of integer cast here, despite my IDE complaining
-    // std::cerr << "Controller.mpc: trajectoryStartTime = " << trajectoryStartTime << ", startState.time() = " << startState.time() << ", referenceTrajectory.totalTime() = " << referenceTrajectory.totalTime() << ", c_ScoringTimeStep = " << c_ScoringTimeStep << std::endl;
-    const int maxIterations = (trajectoryStartTime - startState.time() + referenceTrajectory.totalTime()) / c_ScoringTimeStep - 1;
+    // std::cerr << "Controller.mpc: trajectoryStartTime = " << trajectoryStartTime << ", startState.time() = " << startState.time() << ", referenceTrajectory.totalTime() = " << referenceTrajectory.totalTime() << ", m_ScoringTimeStep = " << m_ScoringTimeStep << std::endl;
+    const int maxIterations = (trajectoryStartTime - startState.time() + referenceTrajectory.totalTime()) / m_ScoringTimeStep - 1;
     // std::cerr << "Controller.mpc: maxIterations = " << maxIterations << std::endl;
     // set up storage (no heap memory)
     // each "stack frame" in DFS is represented by a slot in these arrays, so I can skip overhead of recursion
@@ -103,7 +103,7 @@ Controller::MpcState Controller::mpc(State startState, const DubinsPlan& referen
         rudderIndices[iterations] = 0;
         throttleIndices[iterations] = 0; // not necessary as default for int is zero but I want to be sure
         // set time in scoring checkpoint so we can sample the reference trajectory
-        cachedScoringCheckpoints[iterations].time() = startState.time() + ((iterations + 1) * c_ScoringTimeStep);
+        cachedScoringCheckpoints[iterations].time() = startState.time() + ((iterations + 1) * m_ScoringTimeStep);
         // sample the reference trajectory at the scoring checkpoint
         // printf("DEBUG: Controller::mpc() while-loop referenceTrajectory.sample() called on cachedScoringCheckpoints[iterations] State with time %f\n", cachedScoringCheckpoints[iterations].time());
         referenceTrajectory.sample(cachedScoringCheckpoints[iterations]);
@@ -158,7 +158,7 @@ Controller::MpcState Controller::mpc(State startState, const DubinsPlan& referen
             auto& next = currentTrajectory[searchDepthIndex + 1];
             // simulate next state with next controls
             next.state = currentMpcState.state.simulate(
-                    rudders[rudderIndex], throttles[throttleIndex], c_ScoringTimeStep, m_DisturbanceEstimate);
+                    rudders[rudderIndex], throttles[throttleIndex], m_ScoringTimeStep, m_DisturbanceEstimate);
             // store the rudders
             next.LastRudder = rudders[rudderIndex];
             next.LastThrottle = throttles[throttleIndex];
@@ -201,7 +201,7 @@ Controller::MpcState Controller::mpc(State startState, const DubinsPlan& referen
 
 mpcCleanup: // shush I'm using it sparingly and appropriately
 
-//    m_Output << "Managed " << iterations << " iterations of limited-branching MPC (" << c_ScoringTimeStep * iterations
+//    m_Output << "Managed " << iterations << " iterations of limited-branching MPC (" << m_ScoringTimeStep * iterations
 //        << " seconds in the future)" << std::endl;
 
     if (overallBestTrajectory.size() < 2) throw std::runtime_error("MPC failed to complete a single iteration");
@@ -211,8 +211,8 @@ mpcCleanup: // shush I'm using it sparingly and appropriately
     m_ControlReceiver->displayTrajectory(forDisplay, false, m_Achievable);
     if (!std::isfinite(overallBestTrajectory[1].LastRudder) || !std::isfinite(overallBestTrajectory[1].LastThrottle))
         throw std::runtime_error("MPC selected non-finite controls");
-    static_assert(c_ScoringTimeStep == 1.0, "Assume scoring time-step is equal to the planner's planning time");
-    return overallBestTrajectory[1]; // based on c_ScoringTimeStep
+    // static_assert(m_ScoringTimeStep == 1.0, "Assume scoring time-step is equal to the planner's planning time");
+    return overallBestTrajectory[1]; // based on m_ScoringTimeStep
 }
 
 void Controller::terminate()
@@ -404,7 +404,7 @@ void Controller::runMpc(DubinsPlan trajectory, long trajectoryNumber) {
         // simulate controls to estimate our position at the end of MPC (0.1s from now)
         auto stateAfterCurrentControl = getStateAfterCurrentControl();
         // make sure the reference trajectory is long enough to do a depth 3 search
-        if (!trajectory.containsTime(stateAfterCurrentControl.state.time() + 3 * c_ScoringTimeStep)) break; // why 3? Seems like a good number of iterations
+        if (!trajectory.containsTime(stateAfterCurrentControl.state.time() + 3 * m_ScoringTimeStep)) break; // why 3? Seems like a good number of iterations
         // actually run MPC
         auto result = mpc(stateAfterCurrentControl.state, trajectory, m_ControlReceiver->getTime() + m_PlanningTime,
             trajectoryNumber);
