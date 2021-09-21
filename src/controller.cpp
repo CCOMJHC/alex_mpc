@@ -320,7 +320,7 @@ State Controller::updateReferenceTrajectory(const DubinsPlan& referenceTrajector
         // starting or ending pose can result in a substantially longer curve if the original suffix is infeasible. While
         // the controller is hopefully pretty good, we can never hope to get rid of all actuation noise, and it turns out
         // that this issue presents itself on the scale of floating point inaccuracy anyway. If we're in a situation where
-        // we expect to be finding the same plan several times in a row (advancing slowly in time), the difference is the
+        // we expect to be finding the same plan several times in a row (advancing slowly in time), the difference in the
         // controller's estimation of our position at the start of the planning iteration can differ enough from the previous
         // plan such that the plan's suffix is infeasible without making a loop. If we allow the controller to  determine
         // that we're pretty close to the reference trajectory, and if we kept going we'd probably do pretty well, we can
@@ -413,7 +413,7 @@ void Controller::runMpc(DubinsPlan trajectory, long trajectoryNumber) {
     }
     double checkInTime = m_ControlReceiver->getTime();
     if (checkInTime >= endTime) {
-        cerr << checkInTime << ": Controller's reference trajectory appears to have timed out. No more controls will be issued" << std::endl;
+        cerr << checkInTime << ": Controller's reference trajectory with endTime " << endTime << " appears to have timed out. No more controls will be issued." << std::endl;
         // let node know we timed out
         m_ControlReceiver->timedOut();
     }
