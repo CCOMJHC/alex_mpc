@@ -3,7 +3,7 @@
 #include "../src/controller.h"
 #include "NodeStub.h"
 extern "C" {
-#include "dubins.h"
+#include "dubins_curves/dubins.h"
 };
 using std::vector;
 using std::pair;
