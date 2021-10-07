@@ -224,7 +224,7 @@ private:
      * planning time changes, that state will need to be calculated based on that other time step and the controls
      * selected.
      */
-    static constexpr double c_ScoringTimeStep = 1;
+    double m_ScoringTimeStep = 1;
     /**
      * Tolerance used to circumvent some rounding errors. Pretty arbitrary.
      */

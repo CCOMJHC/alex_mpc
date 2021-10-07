@@ -193,9 +193,11 @@ public:
      * @return
      */
     bool updateReferenceTrajectory(path_planner_common::UpdateReferenceTrajectory::Request &req, path_planner_common::UpdateReferenceTrajectory::Response &res) {
+        // std::cerr << "MPCNode.updateReferencTrajectory: starting" << std::endl;
         if (!m_Enabled) return false;
         auto s = m_Controller->updateReferenceTrajectory(convertPlanFromMessage(req.plan), m_TrajectoryNumber++, true);
         res.state = m_TrajectoryDisplayer.convertToStateMsg(s);
+        // std::cerr << "MPCNode.updateReferenceTrajectory: s.time() = " << s.time() << std::endl;
         return s.time() != -1;
     }
 
