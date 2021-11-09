@@ -98,7 +98,7 @@ public:
     void odometryCallback(const nav_msgs::Odometry::ConstPtr &inmsg)
     {
 
-        m_current_heading = project11::quaternionToHeadingDegrees(inmsg->pose.pose.orientation);
+        m_current_heading = project11::quaternionToHeadingRadians(inmsg->pose.pose.orientation) ;
         m_current_speed = project11::speedOverGround(inmsg->twist.twist.linear);
         m_current_x = inmsg->pose.pose.position.x;
         m_current_y = inmsg->pose.pose.position.y;
