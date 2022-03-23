@@ -7,15 +7,15 @@
 #include <vector>
 #include "project11/gz4d_geo.h"
 #include "project11/tf2_utils.h"
-#include <path_planner_common/UpdateReferenceTrajectory.h>
+#include <alex_path_planner_common/UpdateReferenceTrajectory.h>
 #include <fstream>
 #include <geometry_msgs/PoseStamped.h>
 #include "controller.h"
-#include <path_planner_common/DubinsPlan.h>
-#include <mpc/mpcConfig.h>
+#include <alex_path_planner_common/DubinsPlan.h>
+#include <alex_mpc/mpcConfig.h>
 #include <dynamic_reconfigure/server.h>
 #include <geographic_msgs/GeoPoint.h>
-#include <path_planner_common/TrajectoryDisplayerHelper.h>
+#include <alex_path_planner_common/TrajectoryDisplayerHelper.h>
 #include <tf/LinearMath/Quaternion.h>
 #include <tf/LinearMath/Matrix3x3.h>
 
@@ -55,7 +55,7 @@ public:
 
         m_Controller = new Controller(this);
 
-        dynamic_reconfigure::Server<mpc::mpcConfig>::CallbackType f;
+        dynamic_reconfigure::Server<alex_mpc::mpcConfig>::CallbackType f;
         f = boost::bind(&MPCNode::reconfigureCallback, this, _1, _2);
 
         m_Dynamic_Reconfigure_Server.setCallback(f);
@@ -118,7 +118,7 @@ public:
      * @param config
      * @param level
      */
-    void reconfigureCallback(mpc::mpcConfig &config, uint32_t level)
+    void reconfigureCallback(alex_mpc::mpcConfig &config, uint32_t level)
     {
         m_Controller->updateConfig(
                 config.rudder_granularity, config.throttle_granularity,
@@ -138,7 +138,7 @@ public:
         if (!m_Enabled) m_Controller->terminate();
     }
 
-    void referenceTrajectoryCallback(const path_planner_common::PlanConstPtr& inmsg) {
+    void referenceTrajectoryCallback(const alex_path_planner_common::PlanConstPtr& inmsg) {
         // ignore state returned, just update
         m_Controller->updateReferenceTrajectory(convertPlanFromMessage(*inmsg), m_TrajectoryNumber++, false);
     }
@@ -192,7 +192,7 @@ public:
      * @param res
      * @return
      */
-    bool updateReferenceTrajectory(path_planner_common::UpdateReferenceTrajectory::Request &req, path_planner_common::UpdateReferenceTrajectory::Response &res) {
+    bool updateReferenceTrajectory(alex_path_planner_common::UpdateReferenceTrajectory::Request &req, alex_path_planner_common::UpdateReferenceTrajectory::Response &res) {
         // std::cerr << "MPCNode.updateReferencTrajectory: starting" << std::endl;
         if (!m_Enabled) return false;
         auto s = m_Controller->updateReferenceTrajectory(convertPlanFromMessage(req.plan), m_TrajectoryNumber++, true);
@@ -206,7 +206,7 @@ public:
      * @param plan
      * @return
      */
-    static DubinsPlan convertPlanFromMessage(path_planner_common::Plan plan) {
+    static DubinsPlan convertPlanFromMessage(alex_path_planner_common::Plan plan) {
         DubinsPlan result;
         for (const auto& d : plan.paths) {
             DubinsWrapper wrapper;
@@ -261,7 +261,7 @@ private:
     long m_TrajectoryNumber = 0;
 
     Controller* m_Controller;
-    dynamic_reconfigure::Server<mpc::mpcConfig> m_Dynamic_Reconfigure_Server;
+    dynamic_reconfigure::Server<alex_mpc::mpcConfig> m_Dynamic_Reconfigure_Server;
 
     std::atomic<bool> m_Enabled{}; // share visibility between ROS thread and MPC thread
 

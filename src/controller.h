@@ -2,13 +2,13 @@
 #define SRC_CONTROLLER_H
 
 #include "control_receiver.h"
-#include "path_planner_common/State.h"
+#include "alex_path_planner_common/State.h"
 #include "VehicleState.h"
 #include "CurrentEstimator.h"
 #include <mutex>
 #include <future>
 #include <random>
-#include <path_planner_common/DubinsPlan.h>
+#include <alex_path_planner_common/DubinsPlan.h>
 
 /**
  * Class which runs model predictive control and maintains everything required for it.

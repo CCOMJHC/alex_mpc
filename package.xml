@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>mpc</name>
+  <name>alex_mpc</name>
   <version>0.0.0</version>
   <description>Package for Model Predictive Control</description>
 
@@ -28,7 +28,7 @@
   <exec_depend>roscpp</exec_depend>
   <exec_depend>rosbag</exec_depend>
   <exec_depend>project11</exec_depend>
-  <depend>path_planner_common</depend>
+  <depend>alex_path_planner_common</depend>
   <depend>dynamic_reconfigure</depend>
 
 

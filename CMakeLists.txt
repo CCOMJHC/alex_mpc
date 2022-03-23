@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(mpc)
+project(alex_mpc)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -funsafe-math-optimizations")
 
@@ -13,7 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
     rosbag
     project11
     genmsg
-    path_planner_common
+    alex_path_planner_common
     actionlib_msgs
     dynamic_reconfigure
     dubins_curves
@@ -21,11 +21,11 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 generate_dynamic_reconfigure_options(
-        cfg/mpc.cfg
+        cfg/alex_mpc.cfg
 )
 
 catkin_package(
-  CATKIN_DEPENDS geometry_msgs roscpp project11 path_planner_common
+  CATKIN_DEPENDS geometry_msgs roscpp project11 alex_path_planner_common
 )
 
 include_directories(
@@ -39,7 +39,7 @@ add_library(controller
         src/CurrentEstimator.cpp
         )
 
-add_dependencies(controller path_planner_common)
+add_dependencies(controller alex_path_planner_common)
 
 #target_link_libraries(controller path_planner_state dubins_plan dubins ${catkin_LIBRARIES})
 target_link_libraries(controller ${catkin_LIBRARIES})
@@ -49,7 +49,7 @@ add_executable(${PROJECT_NAME}_node
         )
 
 add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(${PROJECT_NAME}_node marine_msgs_gencpp path_planner_common)
+add_dependencies(${PROJECT_NAME}_node marine_msgs_gencpp alex_path_planner_common)
 add_dependencies(${PROJECT_NAME}_node ${PROJECT_NAME}_gencfg)
 
 
