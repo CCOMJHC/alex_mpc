@@ -12,7 +12,7 @@
 #include <geometry_msgs/PoseStamped.h>
 #include "controller.h"
 #include <alex_path_planner_common/DubinsPlan.h>
-#include <alex_mpc/mpcConfig.h>
+#include <alex_mpc/alex_mpcConfig.h>
 #include <dynamic_reconfigure/server.h>
 #include <geographic_msgs/GeoPoint.h>
 #include <alex_path_planner_common/TrajectoryDisplayerHelper.h>
@@ -55,7 +55,7 @@ public:
 
         m_Controller = new Controller(this);
 
-        dynamic_reconfigure::Server<alex_mpc::mpcConfig>::CallbackType f;
+        dynamic_reconfigure::Server<alex_mpc::alex_mpcConfig>::CallbackType f;
         f = boost::bind(&MPCNode::reconfigureCallback, this, _1, _2);
 
         m_Dynamic_Reconfigure_Server.setCallback(f);
@@ -118,7 +118,7 @@ public:
      * @param config
      * @param level
      */
-    void reconfigureCallback(alex_mpc::mpcConfig &config, uint32_t level)
+    void reconfigureCallback(alex_mpc::alex_mpcConfig &config, uint32_t level)
     {
         m_Controller->updateConfig(
                 config.rudder_granularity, config.throttle_granularity,
@@ -261,7 +261,7 @@ private:
     long m_TrajectoryNumber = 0;
 
     Controller* m_Controller;
-    dynamic_reconfigure::Server<alex_mpc::mpcConfig> m_Dynamic_Reconfigure_Server;
+    dynamic_reconfigure::Server<alex_mpc::alex_mpcConfig> m_Dynamic_Reconfigure_Server;
 
     std::atomic<bool> m_Enabled{}; // share visibility between ROS thread and MPC thread
 
