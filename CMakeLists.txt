@@ -9,9 +9,9 @@ find_package(catkin REQUIRED COMPONENTS
     roscpp
     geometry_msgs
     geographic_msgs
-    marine_msgs
     rosbag
     project11
+    project11_msgs
     genmsg
     alex_path_planner_common
     actionlib_msgs
@@ -49,7 +49,7 @@ add_executable(${PROJECT_NAME}_node
         )
 
 add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(${PROJECT_NAME}_node marine_msgs_gencpp alex_path_planner_common)
+add_dependencies(${PROJECT_NAME}_node project11_msgs_gencpp alex_path_planner_common)
 add_dependencies(${PROJECT_NAME}_node ${PROJECT_NAME}_gencfg)
 
 

@@ -2,7 +2,7 @@
 #include "geometry_msgs/TwistStamped.h"
 #include "std_msgs/Bool.h"
 #include "std_msgs/String.h"
-#include "marine_msgs/Helm.h"
+#include "project11_msgs/Helm.h"
 #include "nav_msgs/Odometry.h"
 #include <vector>
 #include "project11/gz4d_geo.h"
@@ -38,7 +38,7 @@ public:
      */
     explicit MPCNode()
     {
-        m_helm_pub = m_node_handle.advertise<marine_msgs::Helm>("helm",1);
+        m_helm_pub = m_node_handle.advertise<project11_msgs::Helm>("helm",1);
         m_display_pub = m_node_handle.advertise<geographic_visualization_msgs::GeoVizItem>("project11/display",1);
         m_disturbance_estimate_pub = m_node_handle.advertise<geometry_msgs::Vector3>("mpc/disturbance_estimate", 1);
 
@@ -155,7 +155,7 @@ public:
     void receiveControl(double rudder, double throttle) final
     {
         if (!m_Enabled) return;
-        marine_msgs::Helm helm;
+        project11_msgs::Helm helm;
         helm.rudder = rudder;
         helm.throttle = throttle;
         helm.header.stamp = ros::Time::now();
